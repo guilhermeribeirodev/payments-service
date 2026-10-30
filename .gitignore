@@ -1,0 +1,10 @@
+build/
+.gradle/
+out/
+*.iml
+.idea/*
+!.idea/runConfigurations/
+.kotlin/
+node_modules/
+web/dist/
+.env

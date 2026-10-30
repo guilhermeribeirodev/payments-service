@@ -1,0 +1,5 @@
+# Production-style profile: one JSON document per log line (ECS), ready for a log pipeline.
+logging:
+  structured:
+    format:
+      console: ecs

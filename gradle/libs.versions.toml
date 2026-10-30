@@ -1,0 +1,26 @@
+[versions]
+kotlin = "2.1.21"
+spring-boot = "3.5.6"
+spring-dependency-management = "1.1.7"
+openapi-generator = "7.14.0"
+spotless = "7.0.4"
+springmockk = "4.0.2"
+archunit = "1.4.1"
+springdoc = "2.8.13"
+mockk = "1.14.5"
+swagger-request-validator = "2.44.4"
+
+[libraries]
+springmockk = { module = "com.ninja-squad:springmockk", version.ref = "springmockk" }
+archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+swagger-request-validator = { module = "com.atlassian.oai:swagger-request-validator-mockmvc", version.ref = "swagger-request-validator" }
+springdoc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+openapi-generator = { id = "org.openapi.generator", version.ref = "openapi-generator" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

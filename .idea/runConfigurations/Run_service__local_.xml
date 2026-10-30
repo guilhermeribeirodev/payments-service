@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run service (local)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <module name="payments-service.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.payments.PaymentsApplicationKt" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Infra up (db + jaeger)" run_configuration_type="docker-deploy" />
+    </method>
+  </configuration>
+</component>

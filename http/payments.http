@@ -1,0 +1,36 @@
+### IntelliJ HTTP Client - select the "local" environment (http-client.env.json)
+
+### Authorise a payment (idempotent: re-run with the same key to see the 200 replay)
+POST {{host}}/v1/payments
+Idempotency-Key: demo-key-0001
+Content-Type: application/json
+
+{ "amount": 1500, "currency": "GBP", "reference": "order-1001" }
+
+> {% client.global.set("paymentId", response.body.id); %}
+
+### Get it
+GET {{host}}/v1/payments/{{paymentId}}
+
+### Capture
+POST {{host}}/v1/payments/{{paymentId}}/capture
+
+### Cancel (409 once captured)
+POST {{host}}/v1/payments/{{paymentId}}/cancel
+
+### List, newest first
+GET {{host}}/v1/payments?status=CAPTURED&limit=10
+
+### Validation error -> 400 application/problem+json
+POST {{host}}/v1/payments
+Idempotency-Key: demo-key-0002
+Content-Type: application/json
+
+{ "amount": 0, "currency": "gbp", "reference": "" }
+
+### Health, metrics, contract
+GET {{host}}/actuator/health
+###
+GET {{host}}/actuator/prometheus
+###
+GET {{host}}/openapi/payments-api.yaml

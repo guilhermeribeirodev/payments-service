@@ -1,0 +1,281 @@
+openapi: 3.0.3
+info:
+  title: Payments API
+  version: 1.0.0
+  description: |
+    Sample payments service. This file is the **source of truth** for the HTTP contract:
+    controllers implement the interfaces generated from it (see `build.gradle.kts`).
+
+    Conventions (see `docs/api-design-guidelines.md`):
+    * Money is an integer in minor units (pence/cents) plus an ISO 4217 currency code.
+    * Errors are RFC 9457 `application/problem+json`.
+    * `POST /v1/payments` is idempotent via the `Idempotency-Key` header.
+    * Timestamps are RFC 3339 / ISO 8601 in UTC.
+  contact:
+    name: Platform Engineering
+servers:
+  - url: http://localhost:8080
+    description: Local
+tags:
+  - name: payments
+    description: Authorise, capture, cancel and query payments
+
+paths:
+  /v1/payments:
+    post:
+      tags: [payments]
+      operationId: createPayment
+      summary: Authorise a payment
+      description: |
+        Creates a payment in the `AUTHORISED` state. Replaying the same `Idempotency-Key` with the
+        same body returns the original payment (`200`); reusing a key with a different body is a `409`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Payment authorised
+          headers:
+            Location:
+              description: URL of the created payment
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '200':
+          description: Idempotent replay - the payment already existed for this key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+    get:
+      tags: [payments]
+      operationId: listPayments
+      summary: List payments, newest first
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: A page of payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/payments/{paymentId}:
+    get:
+      tags: [payments]
+      operationId: getPayment
+      summary: Get a payment
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: The payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/payments/{paymentId}/capture:
+    post:
+      tags: [payments]
+      operationId: capturePayment
+      summary: Capture an authorised payment
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: The captured payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/payments/{paymentId}/cancel:
+    post:
+      tags: [payments]
+      operationId: cancelPayment
+      summary: Cancel an authorised payment
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: The cancelled payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated unique key (e.g. a UUID) that makes the request safe to retry.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: The request is malformed or fails validation
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The payment does not exist
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: The request conflicts with the current state of the resource
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unprocessable:
+      description: The request is well-formed but semantically invalid
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    PaymentStatus:
+      type: string
+      enum: [AUTHORISED, CAPTURED, CANCELLED]
+    CreatePaymentRequest:
+      type: object
+      required: [amount, currency, reference]
+      properties:
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Amount in minor units (e.g. 1500 = GBP 15.00)
+          example: 1500
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217 currency code
+          example: GBP
+        reference:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Merchant reference, e.g. an order number
+          example: order-1001
+    Payment:
+      type: object
+      required: [id, amount, currency, reference, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        reference:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    PaymentPage:
+      type: object
+      required: [items, limit, offset, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    Problem:
+      type: object
+      description: RFC 9457 problem details
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri

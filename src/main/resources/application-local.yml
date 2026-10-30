@@ -1,0 +1,12 @@
+# Local development: sample every trace, show health details.
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.example.payments: DEBUG

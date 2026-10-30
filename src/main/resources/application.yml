@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: payments-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/payments}
+    username: ${DB_USERNAME:payments}
+    password: ${DB_PASSWORD:payments}
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  jackson:
+    default-property-inclusion: non_null
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}
+  otlp:
+    tracing:
+      endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+
+# Trace/span ids in every log line (also included automatically by the structured formats).
+logging:
+  pattern:
+    correlation: "[%X{traceId:-},%X{spanId:-}] "
+
+springdoc:
+  api-docs:
+    enabled: false # the contract is hand-written and served from /openapi/payments-api.yaml
+  swagger-ui:
+    path: /docs
+    url: /openapi/payments-api.yaml
+
+payments:
+  outbox:
+    relay:
+      enabled: true
+      poll-interval-ms: 1000
+      batch-size: 50
