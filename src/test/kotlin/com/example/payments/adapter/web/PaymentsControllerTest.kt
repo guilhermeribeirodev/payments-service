@@ -8,10 +8,13 @@ import com.example.payments.domain.Payment
 import com.example.payments.domain.PaymentNotFoundException
 import com.example.payments.domain.PaymentStatus
 import com.ninjasquad.springmockk.MockkBean
+import io.micrometer.observation.ObservationRegistry
 import io.mockk.every
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
@@ -24,9 +27,15 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 import java.util.UUID
 
+@TestConfiguration
+class NoopObservationConfig {
+    @Bean
+    fun observationRegistry(): ObservationRegistry = ObservationRegistry.NOOP
+}
+
 /** Web slice: HTTP mapping, validation and error format only. The service is mocked. */
 @WebMvcTest(PaymentsController::class)
-@Import(ApiExceptionHandler::class)
+@Import(NoopObservationConfig::class, ApiExceptionHandler::class)
 class PaymentsControllerTest(@Autowired private val mvc: MockMvc) {
     @MockkBean
     private lateinit var service: PaymentService

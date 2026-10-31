@@ -1,6 +1,9 @@
 package com.example.payments.integration
 
 import com.atlassian.oai.validator.OpenApiInteractionValidator
+import com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers
+import com.atlassian.oai.validator.report.LevelResolver
+import com.atlassian.oai.validator.report.ValidationReport.Level
 import com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
@@ -27,6 +30,18 @@ import java.util.UUID
  * End-to-end through HTTP -> service -> real PostgreSQL (Testcontainers) -> outbox relay.
  * Every response is also validated against openapi/payments-api.yaml (contract test).
  */
+
+private val responseOnlyValidator = OpenApiInteractionValidator
+    .createForSpecificationUrl("openapi/payments-api.yaml")   // same path you just fixed
+    .withLevelResolver(
+        LevelResolver.create()
+            .withLevel("validation.request.body.schema.minimum", Level.IGNORE)
+            .build()
+    )
+    .build()
+
+private val responseOnlyContract = OpenApiValidationMatchers.openApi().isValid(responseOnlyValidator)
+
 @Tag("integration")
 @SpringBootTest(properties = ["payments.outbox.relay.poll-interval-ms=100"])
 @AutoConfigureMockMvc
@@ -86,7 +101,6 @@ class PaymentsApiIntegrationTest(
         val id = idOf(create().andExpect(status().isCreated))
         mvc.perform(post("/v1/payments/$id/cancel")).andExpect(status().isOk)
         mvc.perform(post("/v1/payments/$id/capture")).andExpect(status().isConflict).andExpect(contract)
-
         mvc.perform(get("/v1/payments/${UUID.randomUUID()}")).andExpect(status().isNotFound).andExpect(contract)
     }
 
@@ -96,7 +110,7 @@ class PaymentsApiIntegrationTest(
             post("/v1/payments").header("Idempotency-Key", "idem-key-0002")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"amount":-5,"currency":"GBP","reference":"x"}"""),
-        ).andExpect(status().isBadRequest).andExpect(contract)
+        ).andExpect(status().isBadRequest).andExpect(responseOnlyContract)
     }
 
     @Test

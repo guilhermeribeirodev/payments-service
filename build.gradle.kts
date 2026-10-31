@@ -57,6 +57,7 @@ dependencies {
     testImplementation(libs.springmockk)
     testImplementation(libs.swagger.request.validator) // contract tests: responses are validated against the OpenAPI spec
     testImplementation(libs.archunit)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.5.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -98,8 +99,11 @@ tasks.named("compileKotlin") { dependsOn("openApiGenerate") }
 // ---------------------------------------------------------------------------
 // Tests: `test` = fast unit/slice tests, `integrationTest` = Testcontainers (needs Docker).
 // ---------------------------------------------------------------------------
-tasks.test {
-    useJUnitPlatform { excludeTags("integration") }
+//tasks.test {
+//    useJUnitPlatform { excludeTags("integration") }
+//}
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 val integrationTest by tasks.registering(Test::class) {
