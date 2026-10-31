@@ -10,7 +10,9 @@ import org.testcontainers.containers.PostgreSQLContainer
 import java.util.concurrent.CopyOnWriteArrayList
 
 /** Kotlin-friendly subclass: avoids the self-referential generic of PostgreSQLContainer. */
-class PostgresContainer(image: String) : PostgreSQLContainer<PostgresContainer>(image)
+class PostgresContainer(
+    image: String,
+) : PostgreSQLContainer<PostgresContainer>(image)
 
 class RecordingEventPublisher : EventPublisher {
     val messages = CopyOnWriteArrayList<EventMessage>()

@@ -26,9 +26,13 @@ data class AuthorisePaymentCommand(
 sealed interface AuthoriseResult {
     val payment: Payment
 
-    data class Created(override val payment: Payment) : AuthoriseResult
+    data class Created(
+        override val payment: Payment,
+    ) : AuthoriseResult
 
-    data class Replayed(override val payment: Payment) : AuthoriseResult
+    data class Replayed(
+        override val payment: Payment,
+    ) : AuthoriseResult
 }
 
 @Service
@@ -42,13 +46,14 @@ class PaymentService(
     @Transactional
     fun authorise(command: AuthorisePaymentCommand): AuthoriseResult {
         val money = Money(command.amountMinor, command.currency)
-        val candidate = Payment.authorise(
-            id = UUID.randomUUID(),
-            money = money,
-            reference = command.reference,
-            idempotencyKey = command.idempotencyKey,
-            now = clock.instant(),
-        )
+        val candidate =
+            Payment.authorise(
+                id = UUID.randomUUID(),
+                money = money,
+                reference = command.reference,
+                idempotencyKey = command.idempotencyKey,
+                now = clock.instant(),
+            )
 
         if (payments.insertIfAbsent(candidate)) {
             outbox.append(PaymentEvent.Authorised(candidate.id, candidate.createdAt, money.amountMinor, money.currency))
@@ -56,9 +61,10 @@ class PaymentService(
             return AuthoriseResult.Created(candidate)
         }
 
-        val existing = checkNotNull(payments.findByIdempotencyKey(command.idempotencyKey)) {
-            "Idempotency key conflict reported but no payment found"
-        }
+        val existing =
+            checkNotNull(payments.findByIdempotencyKey(command.idempotencyKey)) {
+                "Idempotency key conflict reported but no payment found"
+            }
         if (!existing.sameRequestAs(money, command.reference)) {
             throw IdempotencyKeyReuseException(command.idempotencyKey)
         }

@@ -18,11 +18,17 @@ sealed interface PaymentEvent {
         override val type: String = "payment.authorised"
     }
 
-    data class Captured(override val paymentId: UUID, override val occurredAt: Instant) : PaymentEvent {
+    data class Captured(
+        override val paymentId: UUID,
+        override val occurredAt: Instant,
+    ) : PaymentEvent {
         override val type: String = "payment.captured"
     }
 
-    data class Cancelled(override val paymentId: UUID, override val occurredAt: Instant) : PaymentEvent {
+    data class Cancelled(
+        override val paymentId: UUID,
+        override val occurredAt: Instant,
+    ) : PaymentEvent {
         override val type: String = "payment.cancelled"
     }
 }

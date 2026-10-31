@@ -31,14 +31,15 @@ import java.util.UUID
  * Every response is also validated against openapi/payments-api.yaml (contract test).
  */
 
-private val responseOnlyValidator = OpenApiInteractionValidator
-    .createForSpecificationUrl("openapi/payments-api.yaml")   // same path you just fixed
-    .withLevelResolver(
-        LevelResolver.create()
-            .withLevel("validation.request.body.schema.minimum", Level.IGNORE)
-            .build()
-    )
-    .build()
+private val responseOnlyValidator =
+    OpenApiInteractionValidator
+        .createForSpecificationUrl("openapi/payments-api.yaml") // same path you just fixed
+        .withLevelResolver(
+            LevelResolver
+                .create()
+                .withLevel("validation.request.body.schema.minimum", Level.IGNORE)
+                .build(),
+        ).build()
 
 private val responseOnlyContract = OpenApiValidationMatchers.openApi().isValid(responseOnlyValidator)
 
@@ -76,12 +77,16 @@ class PaymentsApiIntegrationTest(
         val created = create().andExpect(status().isCreated).andExpect(contract)
         val id = idOf(created)
 
-        mvc.perform(get("/v1/payments/$id"))
-            .andExpect(status().isOk).andExpect(contract)
+        mvc
+            .perform(get("/v1/payments/$id"))
+            .andExpect(status().isOk)
+            .andExpect(contract)
             .andExpect(jsonPath("$.status").value("AUTHORISED"))
 
-        mvc.perform(post("/v1/payments/$id/capture"))
-            .andExpect(status().isOk).andExpect(contract)
+        mvc
+            .perform(post("/v1/payments/$id/capture"))
+            .andExpect(status().isOk)
+            .andExpect(contract)
             .andExpect(jsonPath("$.status").value("CAPTURED"))
     }
 
@@ -106,11 +111,14 @@ class PaymentsApiIntegrationTest(
 
     @Test
     fun `validation failures are 400s that match the contract`() {
-        mvc.perform(
-            post("/v1/payments").header("Idempotency-Key", "idem-key-0002")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"amount":-5,"currency":"GBP","reference":"x"}"""),
-        ).andExpect(status().isBadRequest).andExpect(responseOnlyContract)
+        mvc
+            .perform(
+                post("/v1/payments")
+                    .header("Idempotency-Key", "idem-key-0002")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"amount":-5,"currency":"GBP","reference":"x"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(responseOnlyContract)
     }
 
     @Test
@@ -120,13 +128,17 @@ class PaymentsApiIntegrationTest(
         create(reference = "c")
         mvc.perform(post("/v1/payments/$first/capture")).andExpect(status().isOk)
 
-        mvc.perform(get("/v1/payments?limit=2"))
-            .andExpect(status().isOk).andExpect(contract)
+        mvc
+            .perform(get("/v1/payments?limit=2"))
+            .andExpect(status().isOk)
+            .andExpect(contract)
             .andExpect(jsonPath("$.items.length()").value(2))
             .andExpect(jsonPath("$.total").value(3))
 
-        mvc.perform(get("/v1/payments?status=CAPTURED"))
-            .andExpect(status().isOk).andExpect(contract)
+        mvc
+            .perform(get("/v1/payments?status=CAPTURED"))
+            .andExpect(status().isOk)
+            .andExpect(contract)
             .andExpect(jsonPath("$.items.length()").value(1))
             .andExpect(jsonPath("$.items[0].id").value(first))
     }
@@ -140,8 +152,11 @@ class PaymentsApiIntegrationTest(
             assertThat(publisher.messages.map { it.type }).containsExactly("payment.authorised", "payment.captured")
         }
         await().atMost(Duration.ofSeconds(5)).untilAsserted {
-            val unpublished = jdbc.sql("SELECT count(*) FROM outbox_events WHERE published_at IS NULL")
-                .query(Long::class.java).single()
+            val unpublished =
+                jdbc
+                    .sql("SELECT count(*) FROM outbox_events WHERE published_at IS NULL")
+                    .query(Long::class.java)
+                    .single()
             assertThat(unpublished).isZero()
         }
         assertThat(publisher.messages.map { it.aggregateId }.distinct()).containsExactly(UUID.fromString(id))

@@ -67,8 +67,17 @@ dependencies {
 // ---------------------------------------------------------------------------
 openApiGenerate {
     generatorName.set("kotlin-spring")
-    inputSpec.set(layout.projectDirectory.file("src/main/resources/openapi/payments-api.yaml").asFile.path)
-    outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.path)
+    inputSpec.set(
+        layout.projectDirectory
+            .file("src/main/resources/openapi/payments-api.yaml")
+            .asFile.path,
+    )
+    outputDir.set(
+        layout.buildDirectory
+            .dir("generated/openapi")
+            .get()
+            .asFile.path,
+    )
     apiPackage.set("com.example.payments.adapter.web.api")
     modelPackage.set("com.example.payments.adapter.web.model")
     generateApiTests.set(false)
@@ -92,16 +101,19 @@ openApiGenerate {
     )
 }
 
-kotlin.sourceSets.getByName("main").kotlin.srcDir(layout.buildDirectory.dir("generated/openapi/src/main/kotlin"))
+kotlin.sourceSets
+    .getByName("main")
+    .kotlin
+    .srcDir(layout.buildDirectory.dir("generated/openapi/src/main/kotlin"))
 
 tasks.named("compileKotlin") { dependsOn("openApiGenerate") }
 
 // ---------------------------------------------------------------------------
 // Tests: `test` = fast unit/slice tests, `integrationTest` = Testcontainers (needs Docker).
 // ---------------------------------------------------------------------------
-//tasks.test {
+// tasks.test {
 //    useJUnitPlatform { excludeTags("integration") }
-//}
+// }
 tasks.withType<Test> {
     useJUnitPlatform()
 }

@@ -25,13 +25,14 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(PaymentException::class)
     fun handleDomain(ex: PaymentException): ProblemDetail {
-        val (status, slug) = when (ex) {
-            is PaymentNotFoundException -> HttpStatus.NOT_FOUND to "payment-not-found"
-            is InvalidPaymentException -> HttpStatus.UNPROCESSABLE_ENTITY to "invalid-payment"
-            is InvalidPaymentTransitionException -> HttpStatus.CONFLICT to "invalid-transition"
-            is IdempotencyKeyReuseException -> HttpStatus.CONFLICT to "idempotency-key-reuse"
-            is ConcurrentPaymentUpdateException -> HttpStatus.CONFLICT to "concurrent-update"
-        }
+        val (status, slug) =
+            when (ex) {
+                is PaymentNotFoundException -> HttpStatus.NOT_FOUND to "payment-not-found"
+                is InvalidPaymentException -> HttpStatus.UNPROCESSABLE_ENTITY to "invalid-payment"
+                is InvalidPaymentTransitionException -> HttpStatus.CONFLICT to "invalid-transition"
+                is IdempotencyKeyReuseException -> HttpStatus.CONFLICT to "idempotency-key-reuse"
+                is ConcurrentPaymentUpdateException -> HttpStatus.CONFLICT to "concurrent-update"
+            }
         return problem(status, slug, ex.message)
     }
 

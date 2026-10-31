@@ -18,19 +18,22 @@ import com.example.payments.adapter.web.model.PaymentStatus as PaymentStatusDto
  * compiler enforces that we implement exactly what `payments-api.yaml` declares.
  */
 @RestController
-class PaymentsController(private val service: PaymentService) : PaymentsApi {
+class PaymentsController(
+    private val service: PaymentService,
+) : PaymentsApi {
     override fun createPayment(
         idempotencyKey: String,
         createPaymentRequest: CreatePaymentRequest,
     ): ResponseEntity<PaymentDto> {
-        val result = service.authorise(
-            AuthorisePaymentCommand(
-                amountMinor = createPaymentRequest.amount,
-                currency = createPaymentRequest.currency,
-                reference = createPaymentRequest.reference,
-                idempotencyKey = idempotencyKey,
-            ),
-        )
+        val result =
+            service.authorise(
+                AuthorisePaymentCommand(
+                    amountMinor = createPaymentRequest.amount,
+                    currency = createPaymentRequest.currency,
+                    reference = createPaymentRequest.reference,
+                    idempotencyKey = idempotencyKey,
+                ),
+            )
         val body = result.payment.toDto()
         return when (result) {
             is AuthoriseResult.Created -> ResponseEntity.created(URI.create("/v1/payments/${body.id}")).body(body)

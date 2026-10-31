@@ -6,7 +6,10 @@ import com.example.payments.domain.PaymentStatus
 import java.time.Instant
 import java.util.UUID
 
-data class PagedResult<T>(val items: List<T>, val total: Long)
+data class PagedResult<T>(
+    val items: List<T>,
+    val total: Long,
+)
 
 /** Outbound port: payment persistence. */
 interface PaymentRepository {

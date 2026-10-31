@@ -14,21 +14,37 @@ class ArchitectureTest {
         @JvmField
         @ArchTest
         val domainDependsOnNothingButTheJdk: ArchRule =
-            noClasses().that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                    "org.springframework..", "..application..", "..adapter..", "jakarta..", "com.fasterxml..",
+            noClasses()
+                .that()
+                .resideInAPackage("..domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
+                    "org.springframework..",
+                    "..application..",
+                    "..adapter..",
+                    "jakarta..",
+                    "com.fasterxml..",
                 )
 
         @JvmField
         @ArchTest
         val applicationDoesNotKnowAdapters: ArchRule =
-            noClasses().that().resideInAPackage("..application..")
-                .should().dependOnClassesThat().resideInAPackage("..adapter..")
+            noClasses()
+                .that()
+                .resideInAPackage("..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..adapter..")
 
         @JvmField
         @ArchTest
         val webAdapterDoesNotTouchOtherAdapters: ArchRule =
-            noClasses().that().resideInAPackage("..adapter.web..")
-                .should().dependOnClassesThat().resideInAnyPackage("..adapter.persistence..", "..adapter.messaging..")
+            noClasses()
+                .that()
+                .resideInAPackage("..adapter.web..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..adapter.persistence..", "..adapter.messaging..")
     }
 }
