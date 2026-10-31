@@ -8,7 +8,7 @@ springmockk = "4.0.2"
 archunit = "1.4.1"
 springdoc = "2.8.13"
 mockk = "1.14.5"
-swagger-request-validator = "2.44.4"
+swagger-request-validator = "2.46.1"
 
 [libraries]
 springmockk = { module = "com.ninja-squad:springmockk", version.ref = "springmockk" }
